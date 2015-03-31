@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8" />
+		<meta name="format-detection" content="telephone=no" />
+		<meta name="msapplication-tap-highlight" content="no" />
+		<title>NationBuilder Contacts</title>
+
+		<!-- WARNING: for iOS 7, remove the width=device-width and height=device-height attributes. See https://issues.apache.org/jira/browse/CB-4323 -->
+		<meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width, height=device-height, target-densitydpi=device-dpi" />
+		<link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
+
+		<link rel="stylesheet" href="css/foundation.min.css" />
+		<link rel="stylesheet" href="css/app.css" />
+
+		<script src="js/vendor/modernizr.js"></script>
+	</head>
+
+	<body>
+		<div id="loading-modal" class="reveal-modal tiny" data-reveal data-options="close_on_background_click:false">
+			<h3><i class="fa fa-cog fa-spin"></i>Loading...</h3>
+
+			<p>Loading information from your nation. Please be patient.</p>	
+		</div>
+
+		<div id="log-in-box" class="row">
+			<div class="small-12 columns">
+				<div class="logo">
+					<img src="img/nb-logo.png" />
+				</div>
+
+				<h1>Contacts</h1>
+
+				<div>
+					<input name="slug" id="slug" type="text" placeholder="Nation Slug"/>
+				</div>
+
+				<input class="button wide large" type="button" id="logIn" value="Log In" />
+			</div>
+		</div> <!-- #log-in-box -->
+
+		<div id="top-nav" class="row hidden">
+			<div class="top-navigation">
+				<div class="small-6 columns">
+					<i class="fa fa-search fa-fw"></i>
+				</div>
+
+				<div class="small-6 columns">
+					<i class="fa fa-search fa-fw"></i>
+				</div>
+			</div> <!-- .top-navigation -->
+		</div> <!-- #top-nav -->
+
+		<div id="main-menu" class="interface-window row hidden">
+			<div class="small-12 columns">
+				<a id="search-button">
+					<i class="fa fa-search fa-fw"></i>
+					<span>Search Contacts</span>
+				</a>
+			</div>
+
+			<div class="small-12 columns">
+				<a id="create-button">
+					<i class="fa fa-search fa-fw"></i>
+					<span>Add Contact</span>
+				</a>
+			</div>
+		</div> <!-- #main-menu -->
+
+		<div id="search-form" class="interface-window row hidden">
+			<div class="small-4 columns">
+				<label for="search-email">Email:</label>
+			</div>
+
+			<div class="small-8 columns">
+				<input type="email" id="search-email" name="search-email" />
+			</div>
+
+			<div class="small-12 columns">
+				<input type="button" class="button large" id="search-submit" value="Search" />
+			</div>
+		</div> <!-- #search-menu -->
+
+		<div id="results" class="interface-window row hidden">
+
+		</div> <!-- #results -->
+
+		<div class="hidden">
+			<input class="button large" type="button" id="showToken" value="Show Token" />
+			<input class="button large" type="button" id="showIndex" value="Index" />
+			<input class="button large" type="button" id="matchEmail" value="Lookup Nicole" />
+			<input class="button large" type="button" id="searchFunction" value="Search" />
+			<input class="button large" type="button" id="testPush" value="Push" />
+		</div>
+
+		<div id="output"></div>
+	</body>
+
+	<!-- jQuery -->
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
+
+	<!-- Required for Phone Gap -->
+	<script type="text/javascript" src="cordova.js"></script>
+
+	<!-- Foundation JS -->
+	<script src="js/foundation.min.js"></script>
+
+	<script>
+/*
+		// Global Variables
+		var slug;
+		var methods = {};
+		var types = {};
+		var statuses = {};
+
+		// Initialize Foundation
+		$( document ).foundation();
+
+		// Initialize PhoneGap
+		app.initialize();
+
+		$( document ).ready( function() {
+		});
+
+		$( '#logIn' ).click(function() {
+			$.getJSON('http://contacts.richiroutreach.com/api-endpoint.php', { slug: $( '#slug' ).val(), endpoint: 'code' }, function( response ) {
+				checkAuthentication();
+
+				if( response.result.code == 2 ) {
+					var ref = window.open( response.result.redirect_url, "_blank" );		
+				}
+			});
+		});
+
+		$( '#search-button' ).click( function() { 
+			$( this ).fadeOut( 300, function() {
+				$( '#search-form' ).delay( 50 ).fadeIn( 300 );
+			});
+		});
+
+		$( '#search-submit' ).click( function() {
+			$( this ).prop( 'disabled', true );
+
+			$.when(
+				$.getJSON( 'http://contacts.richiroutreach.com/api-endpoint.php', { slug: $( '#slug' ).val(), endpoint: 'people', method: 'match', params: { email: $( '#search-email' ).val() } }, function( response ) {
+					console.log( response );
+					$( '#results' ).append( response.result.person.full_name ).show();
+				})
+			).done( function() {
+				$( '#search-submit' ).prop( 'disabled', false );
+			});
+		});
+
+		function checkAuthentication() {
+			setTimeout(function() {
+				$.getJSON( 'http://contacts.richiroutreach.com/api-endpoint.php', { slug: $( '#slug' ).val(), endpoint: 'authorized' }, function( response ) {
+					if( response.code == "5" ) {
+						$( document ).trigger( 'authenticated' );
+						clearTimeout();
+					} else {
+						checkAuthentication();
+					}
+				});
+			}, 1000);			
+		}
+
+		$(document).on("authenticated", function() {
+			$( '#log-in-box' ).fadeOut( 300 );
+
+			$( '#loading-modal' ).foundation('reveal', 'open');
+
+			loadData();
+		});		
+
+		function loadData() {
+			$.when(
+				$.getJSON( 'http://contacts.richiroutreach.com/api-endpoint.php', { slug: $( '#slug' ).val(), endpoint: 'nation', method: 'contact_types' }, function( response ) {
+					for( i = 0; i < response.result.results.length; i++ ) {
+						types[ response.result.results[i].id ] = response.result.results[i].name;
+
+						$( '#select-type' ).append('<option value="' + response.result.results[i].id + '">' + response.result.results[i].name + '</option>')
+					}
+				}),
+
+				$.getJSON( 'http://contacts.richiroutreach.com/api-endpoint.php', { slug: $( '#slug' ).val(), endpoint: 'nation', method: 'contact_methods' }, function( response ) {
+					for( i = 0; i < response.result.results.length; i++ ) {
+						methods[ response.result.results[i].api_name ] = response.result.results[i].name;
+
+						$( '#select-method' ).append('<option value="' + response.result.results[i].api_name + '">' + response.result.results[i].name + '</option>')
+					}
+				}),		
+
+				$.getJSON( 'http://contacts.richiroutreach.com/api-endpoint.php', { slug: $( '#slug' ).val(), endpoint: 'nation', method: 'contact_statuses' }, function( response ) {
+					for( i = 0; i < response.result.results.length; i++ ) {
+						statuses[ response.result.results[i].api_name ] = response.result.results[i].name;
+
+						$( '#select-status' ).append('<option value="' + response.result.results[i].api_name + '">' + response.result.results[i].name + '</option>')
+					}
+				})
+			).done(function() {
+				$( '#loading-modal' ).foundation('reveal', 'close');
+				$( '#top-nav' ).fadeIn( 300 ); 
+				$( '#main-menu' ).fadeIn( 300 );
+			});
+		}
+*/
+	$(document).ready(function() {
+		window.open( 'http://contacts.richiroutreach.com/old/', "_self" );
+	});
+	</script>
+</html>
